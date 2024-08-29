@@ -1,0 +1,64 @@
+@use '@angular/material' as mat;
+@include mat.core();
+@import '@angular/material/core/theming/theming';
+
+.mat-mdc-form-field {
+  .mat-mdc-text-field-wrapper.mdc-text-field {
+    border-radius: 8px !important;
+    background-color: transparent !important;
+    border: 1px solid #0E0E0E;
+  }
+
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none;
+  }
+
+  .mat-mdc-form-field-infix {
+    padding: 8px !important;
+    min-height: 40px;
+  }
+
+  .mdc-line-ripple {
+    display: none;
+  }
+}
+
+.mdc-list-item {
+  .mdc-list-item__primary-text {
+    width: 100%;
+  }
+}
+
+.success-snackbar {
+  --mdc-snackbar-container-color: green;
+  --mat-mdc-snack-bar-button-color: white;
+}
+
+.danger-snackbar {
+  --mdc-snackbar-container-color: red;
+  --mat-mdc-snack-bar-button-color: white;
+}
+
+
+$heading-font-family: "Lato", sans-serif;
+$regular-font-family: "Lato", sans-serif;
+
+$typography-configuration: mat.m2-define-typography-config(
+  $font-family: $regular-font-family,
+  $headline-1: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 112px),
+  $headline-2: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 56px),
+  $headline-3: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 45px, $line-height: 48px),
+  $headline-4: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 34px, $line-height: 40px),
+  $headline-5: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 24px, $line-height: 32px),
+  $headline-6: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 20px, $line-height: 32px),
+  $subtitle-1: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 18px, $line-height: 28px),
+  $subtitle-2: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 18px, $line-height: 24px),
+  $body-2: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 16px),
+  $body-1: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 16px),
+  $caption: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 14px),
+  $button: mat.m2-define-typography-level($font-family: $heading-font-family, $font-size: 16px),
+);
+
+@include mat.typography-hierarchy($typography-configuration);
+
+

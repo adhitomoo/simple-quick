@@ -1,0 +1,9 @@
+[
+  {
+    "context": ["/api"],
+    "target": "https://api.mockapi.com/api/v1",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {"^/api" : ""}
+  }
+]
