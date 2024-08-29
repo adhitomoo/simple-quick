@@ -1,0 +1,55 @@
+<ng-container>
+  <!-- <div class="absolute top-0 left-0 right-0 bottom-0 bg-gray-400 bg-opacity-60 m-auto flex justify-center items-center">
+
+  </div> -->
+
+  <div class="relative w-full max-w-lg p-4 bg-white border border-gray-200 rounded-lg shadow sm:p-6 md:p-8 dark:bg-gray-800 dark:border-gray-700">
+    <button class="absolute top-5 right-5" (click)="close()"><mat-icon>close</mat-icon></button>
+    <form [formGroup]="formTask" class="space-y-6" action="#" (submit)="submit()">
+        <h5 class="text-xl font-medium text-gray-900 dark:text-white">Create New Task</h5>
+        <div class="flex flex-col mb-4">
+          <label for="title-task" class="mb-2">Title Task</label>
+          <mat-form-field class="w-full">
+            <input id="title-task" matInput [formControlName]="'title'" placeholder="Title Task">
+          </mat-form-field>
+        </div>
+
+        <div class="flex flex-col w-full">
+          <!-- <mat-icon class="text-primary-1" svgIcon="heroicons_outline:clock"></mat-icon> -->
+          <label for="date-task" class="mb-2">Due Date</label>
+          <mat-form-field>
+            <input matInput [matDatepicker]="picker" formControlName="dueDate">
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="flex flex-col w-full">
+          <label for="tags-task" class="mb-2">Tags</label>
+          <mat-form-field class="input-rounded" outlined>
+            <mat-select formControlName="tags" multiple>
+              @for (tag of tags; track tag) {
+                <mat-option [value]="tag">
+                  <div class="py-2 px-4 w-full rounded-lg" [style]="{ 'background-color': tag.color }">{{tag.title}}</div>
+                </mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="flex flex-col w-full">
+          <label for="description-task" class="mb-2">Description</label>
+          <mat-form-field class="w-full">
+            <textarea id="description-task" matInput [formControlName]="'description'"></textarea>
+          </mat-form-field>
+        </div>
+        <button type="submit" class="flex flex-row ml-auto w-fit items-center text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-lg px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800" [disabled]="isLoading">
+          @if (isLoading) {
+            <loader class="me-2"></loader>
+          }
+          Save
+        </button>
+    </form>
+  </div>
+</ng-container>

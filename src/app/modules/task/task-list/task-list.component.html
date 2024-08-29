@@ -1,0 +1,69 @@
+<ng-container>
+  <mat-expansion-panel class="font-sans" (opened)="panelOpenState.set(true)" (closed)="panelOpenState.set(false)">
+    <mat-expansion-panel-header>
+      <!-- <mat-panel-title>
+      </mat-panel-title> -->
+      <mat-panel-description>
+        <div class="flex flex-row justify-between items-center gap-8 w-full">
+          <mat-checkbox [(ngModel)]="taskDone" class="example-margin" (click)="$event.stopPropagation()">
+            <!-- <h5 class="text-xl font-bold line-through-2 mx-4"</h5> -->
+            <h5 class="text-xl font-medium dark:text-white mb-0" [class]="taskDone ? 'line-through text-gray-500' : 'text-gray-900'">{{ task.title || 'Untitled' }}</h5>
+          </mat-checkbox>
+
+          <div class="flex flex-row gap-6 justify-between">
+            @if (!taskDone) { <span class="text-red-400 text-body">{{ task.countDate ? task.countDate + ' Days Remaining' : '' }}</span> }
+            <div class="text-body">{{ task.dueDate || 'No Date' }}</div>
+
+            <button [matMenuTriggerFor]="menu" (click)="$event.stopPropagation()">
+              <mat-icon>more_horiz</mat-icon>
+            </button>
+            <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="deleteTask(task.uuid)">
+                <span class="text-red-500 text-lg">Delete</span>
+              </button>
+            </mat-menu>
+          </div>
+        </div>
+
+      </mat-panel-description>
+    </mat-expansion-panel-header>
+
+    <div class="ml-8">
+      <div class="flex flex-col flex-wrap gap-4">
+
+        <div class="flex flex-row flex-wrap gap-4 items-center">
+          <mat-icon class="text-primary-1" svgIcon="heroicons_outline:clock"></mat-icon>
+          <span [class]="taskDone ? 'line-through text-gray-500' : 'text-gray-900'" class="text-lg">{{ task.dueDate || 'No Date'}}</span>
+          <!-- <mat-form-field>
+            <input matInput [matDatepicker]="picker">
+            <mat-hint>MM/DD/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker #picker></mat-datepicker>
+          </mat-form-field> -->
+        </div>
+
+        <div class="flex flex-row flex-auto gap-4 items-start">
+          <mat-icon class="text-primary-1" svgIcon="heroicons_outline:pencil"></mat-icon>
+          <p [class]="taskDone ? 'line-through text-gray-500' : 'text-gray-900'" class="font-light text-gray-600 mb-0">{{ task.description || 'No Description' }}</p>
+        </div>
+
+        <div class="flex flex-row flex-auto gap-4 items-center">
+          <div>
+            <mat-icon class="text-primary-1" svgIcon="heroicons_outline:bookmark"></mat-icon>
+          </div>
+
+          @for (tag of task.tags; track tag) {
+            <div [class]="taskDone ? 'line-through bg-gray-300' : ''" class="py-2 px-4 w-fit rounded-lg" [style]="{ 'background-color': tag.color }">{{tag.title}}</div>
+          }
+
+        </div>
+      </div>
+
+    </div>
+  </mat-expansion-panel>
+  <!-- <div class="flex flex-row justify-between items-start gap-8">
+    <div>
+
+    </div>
+  </div> -->
+</ng-container>

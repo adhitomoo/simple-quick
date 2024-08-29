@@ -1,0 +1,35 @@
+<ng-container>
+  <div class="p-4">
+    <div class="flex flex-row justify-between">
+      <div class="max-w-80 mx-32">
+        <mat-form-field class="input-rounded" outlined>
+          <mat-select [disableRipple]="true">
+            @for (category of categories; track category) {
+              <mat-option [value]="category.value">{{category.name}}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div>
+        <button class="bg-primary-1 px-4 py-3 text-white rounded-lg flex flex-wrap items-center" (click)="createTask()" [disabled]="isLoading">
+          @if (isLoading) { <loader class="me-2"></loader> }
+          New Task
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-8 mx-4">
+      @for (task of tasks; track $index) {
+        <div class="mb-4">
+          <task-list [task]="task" (onDelete)="deleteTask($event)"></task-list>
+        </div>
+      }@empty {
+        <span class="text-lg">No Task</span>
+      }
+    </div>
+  </div>
+
+</ng-container>
+<router-outlet></router-outlet>
+
+
