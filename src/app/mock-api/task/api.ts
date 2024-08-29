@@ -70,7 +70,6 @@ export class TaskMockApi
         {
             // Get the tag
             const newTask = cloneDeep(request.body.task);
-            console.log(newTask, 'testing');
 
             // Generate a new UUID
             newTask.uuid = uuidv4();
@@ -97,8 +96,6 @@ export class TaskMockApi
 
             return task
           });
-
-          console.log(this.tasks);
 
           return [
               200,
@@ -132,8 +129,6 @@ export class TaskMockApi
         {
             // Get the id
             const id = request.params.get('id');
-            console.log(id);
-
             // Find the task and delete it
             const index = this.tasks.findIndex(item => item.uuid === id);
             this.tasks.splice(index, 1);

@@ -1,31 +1,42 @@
+import { messages } from './../../../mock-api/inbox/data';
 import { TextFieldModule } from '@angular/cdk/text-field';
 import { DatePipe, NgClass, NgFor, NgIf, NgTemplateOutlet } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, NgZone, OnDestroy, OnInit, ViewChild, ViewEncapsulation } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
+import {MatProgressSpinnerModule} from '@angular/material/progress-spinner';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
-import { Router, RouterLink } from '@angular/router';
-import { Subject, takeUntil } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Subject, takeUntil, map, take, pipe } from 'rxjs';
+import { InboxService } from '../inbox.service';
+import { FormsModule } from '@angular/forms';
+import { LoaderComponent } from '../../../shared/components/loader.component';
+import _ from 'lodash';
 
 @Component({
     selector       : 'inbox-conversation',
-    templateUrl: './inbox-conversation.component.html',
-    styleUrl: './inbox-conversation.component.scss',
-    encapsulation  : ViewEncapsulation.None,
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    templateUrl    : './inbox-conversation.component.html',
+    styleUrl       : './inbox-conversation.component.scss',
     standalone     : true,
-    imports        : [NgIf, MatSidenavModule, MatButtonModule, RouterLink, MatIconModule, MatMenuModule, NgFor, NgClass, NgTemplateOutlet, MatFormFieldModule, MatInputModule, TextFieldModule, DatePipe],
+    imports        : [NgIf, MatSidenavModule, MatButtonModule, RouterLink, MatIconModule, MatMenuModule, NgFor, NgClass, NgTemplateOutlet, MatFormFieldModule, MatInputModule, TextFieldModule, DatePipe, FormsModule, LoaderComponent, MatProgressSpinnerModule],
 })
 export class InboxConversationComponent implements OnInit, OnDestroy
 {
     @ViewChild('messageInput') messageInput!: ElementRef;
-    chat: any = {};
-    drawerMode: 'over' | 'side' = 'side';
-    drawerOpened: boolean = false;
-    private _unsubscribeAll: Subject<any> = new Subject<any>();
+    newMessage!     : string
+    chatId!         : string;
+    chat            : any = {};
+    contacts!       : any[];
+    isLoading!      : boolean;
+    isLoadingChat   : boolean = true;
+    isLoadingEdit   : boolean = false;
+    repliedConfig!  : any;
+    isEdit          : boolean = false;
+
+    private _unsubscribeAll: Subject<boolean> = new Subject<boolean>();
 
     /**
      * Constructor
@@ -33,9 +44,12 @@ export class InboxConversationComponent implements OnInit, OnDestroy
     constructor(
         private _changeDetectorRef: ChangeDetectorRef,
         private _ngZone: NgZone,
-        private _router: Router
+        private _router: Router,
+        private _inboxService: InboxService,
+        private _activatedRoute: ActivatedRoute
     )
     {
+      this.chatId = this._activatedRoute.snapshot.params['id'];
     }
 
     // -----------------------------------------------------------------------------------------------------
@@ -78,9 +92,11 @@ export class InboxConversationComponent implements OnInit, OnDestroy
     /**
      * On init
      */
-    ngOnInit(): void
+    async ngOnInit()
     {
-
+      this.contacts      = await this.getContacts();
+      this.chat.messages = await this.getMessages();
+      this.chat.subject  = await this.getChats();
     }
 
     /**
@@ -89,7 +105,7 @@ export class InboxConversationComponent implements OnInit, OnDestroy
     ngOnDestroy(): void
     {
         // Unsubscribe from all subscriptions
-        this._unsubscribeAll.next(null);
+        this._unsubscribeAll.next(true);
         this._unsubscribeAll.complete();
     }
 
@@ -100,10 +116,127 @@ export class InboxConversationComponent implements OnInit, OnDestroy
     /**
      * Open the contact info
      */
+
+    getMessages(): Promise<any> {
+      return new Promise(resolve => {
+        this._inboxService.getMessages()
+        .pipe(
+          take(2),
+          takeUntil(this._unsubscribeAll),
+          map((messages) =>
+            messages.map((message) => ({
+              ...message,
+              contact: this.contacts.find(contact => contact.id === message.contactId),
+              isMine: message.contactId === 'me'
+            }))
+          )
+        )
+        .subscribe((messages) => {
+          this.chat.participants = _.uniqBy(messages, 'contactId').length;
+          resolve(messages)
+        })
+      })
+    }
+
+    getContacts(): Promise<any> {
+      this.isLoading = true;
+      return new Promise(resolve => {
+        this._inboxService.getContacts().pipe(takeUntil(this._unsubscribeAll)).subscribe((contacts) => {
+          resolve(contacts)
+          this.isLoading = false;
+        })
+      })
+
+    }
+
+    getChats(): Promise<any> {
+      this.isLoadingChat = true;
+      return new Promise(resolve => {
+        this._inboxService.getChats().pipe(takeUntil(this._unsubscribeAll)).subscribe((chats) => {
+          const currentChat = chats.find(chat => chat.id === this.chatId);
+          resolve(currentChat.subject);
+
+          this.isLoadingChat = false;
+        })
+      })
+
+    }
+
+    public sendMessage(): void {
+      this.isLoading = true;
+      if(this.isEdit) {
+        const message = {
+          value    : this.newMessage,
+          id       : this.repliedConfig.id,
+        }
+        this._inboxService.updateMessage(message).pipe(takeUntil(this._unsubscribeAll)).subscribe(async () => {
+          this.newMessage = '';
+          this.chat.messages = await this.getMessages();
+          this.repliedConfig = {};
+          this.isLoading = false;
+        })
+      }
+
+      if(!this.isEdit) {
+        const message = {
+          value    : this.newMessage,
+          replying : this.repliedConfig ? this.repliedConfig.reply : null,
+        }
+        this._inboxService.createMessage(message).subscribe(async () => {
+          this.newMessage = '';
+          this.chat.messages = await this.getMessages();
+          this.repliedConfig = {};
+          this.isLoading = false;
+        })
+      }
+    }
+
+    public deleteMessage(message: any): void {
+      this.isLoadingEdit = true;
+      const newMessage = {
+        id: message.id,
+        value: null
+      };
+      this._inboxService.updateMessage(newMessage).pipe(takeUntil(this._unsubscribeAll)).subscribe(async () => {
+        this.newMessage = '';
+        this.chat.messages = await this.getMessages();
+        this.repliedConfig = {};
+        this.isLoadingEdit = false;
+      })
+    }
+
+    public editMessage(message: any): void {
+      this.newMessage = message.value;
+      this.repliedConfig = {
+        isReply: true,
+        reply: message.value,
+        id: message.id
+      }
+      this.isEdit = true;
+      // this._inboxService.updateMessage(newMessage).pipe(takeUntil(this._unsubscribeAll)).subscribe(async () => {
+      //   this.newMessage = '';
+      //   this.chat.messages = await this.getMessages();
+      //   this.repliedConfig = {};
+      //   this.isLoadingEdit = false;
+      // })
+    }
+
+    public replyMessage(message: any): void {
+      this.repliedConfig = {
+        isReply: true,
+        reply: message.value,
+        from: message.contact?.name
+      }
+    }
+
+    public closeReply() {
+      this.repliedConfig = {};
+      this.isEdit = false;
+    }
+
     openContactInfo(): void
     {
         // Open the drawer
-        this.drawerOpened = true;
 
         // Mark for check
         this._changeDetectorRef.markForCheck();
@@ -115,7 +248,6 @@ export class InboxConversationComponent implements OnInit, OnDestroy
     resetChat(): void
     {
         // Close the contact info in case it's opened
-        this.drawerOpened = false;
         this._router?.navigate(['./inbox']);
 
         // Mark for check

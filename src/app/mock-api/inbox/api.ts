@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, forEach } from 'lodash';
 import { MockApiService } from '../../../core/mock/mock-api.service';
 import { chats as chatsData, contacts as contactsData, messages as messagesData} from './data';
+
+import {v4 as uuidv4} from 'uuid'
+import { DateTime } from 'luxon';
+
+/* Get the current instant */
+const now = DateTime.now();
 
 @Injectable({providedIn: 'root'})
 export class InboxMockApi
@@ -48,6 +54,75 @@ export class InboxMockApi
 
           // Return the response
           return [200, chats];
+      });
+
+      this._mockApiService
+      .onGet('api/inboxs/contact')
+      .reply(() =>
+      {
+          // Clone the chats
+          const contacts = cloneDeep(this._contacts);
+
+          // Return the response
+          return [200, contacts];
+      });
+
+      this._mockApiService
+      .onGet('api/inboxs/message')
+      .reply(({ request }) =>
+      {
+        // Clone the chats
+        const messages = cloneDeep(this._messages);
+        // Return the response
+        return [200, messages.sort((a, b) => Date.parse(a.createdAt) - Date.parse(b.createdAt))];
+      });
+
+      this._mockApiService
+      .onPost('api/inboxs/message')
+      .reply(({request}) =>
+      {
+          // Get the tag
+          const newMessage = cloneDeep(request.body.message);
+          newMessage.id = uuidv4();
+          newMessage.color = '#EEDCFF',
+          newMessage.contactId = 'me',
+          newMessage.createdAt = now.toISO(),
+
+          this._messages.map((message, index) => {
+            if(index === this._messages.length - 1) {
+              message.unread = false;
+            }
+
+            return message
+          })
+          this._messages.push(newMessage);
+
+          return [
+              200,
+              newMessage,
+          ];
+      });
+
+
+      this._mockApiService
+      .onPatch('api/inboxs/message')
+      .reply(({request}) =>
+        {
+        const currentMessage = request.body.message;
+        const key = Object.keys(request.body.message);
+        this._messages = this._messages.map((message) => {
+          if(message.id === currentMessage.id) {
+            forEach(key, (k) => {
+              message[k] = currentMessage[k]
+            })
+          }
+          return message
+        });
+
+        return [
+            200,
+            currentMessage,
+        ];
       });
     }
 }

@@ -17,6 +17,7 @@ import {MatButtonModule} from '@angular/material/button';
 
 import {v4 as uuidv4} from 'uuid'
 import {FormsModule} from '@angular/forms';
+import { Router } from '@angular/router';
 
 
 @Component({
@@ -37,6 +38,7 @@ export class TaskListComponent implements OnDestroy, OnInit {
   readonly panelOpenState = signal(false);
   @Input()  task!: TaskModel
   @Output() onDelete: EventEmitter<string> = new EventEmitter<string>();
+  @Output() onEdit: EventEmitter<string> = new EventEmitter<string>();
 
   tags!: TagModel[];
   isLoading!: boolean;
@@ -45,6 +47,7 @@ export class TaskListComponent implements OnDestroy, OnInit {
 
 
   constructor(
+    private _router: Router
   ) {
   }
 
@@ -59,6 +62,10 @@ export class TaskListComponent implements OnDestroy, OnInit {
   ngOnDestroy(): void {
     this.unsubscribe$.next(true);
     this.unsubscribe$.complete();
+  }
+
+  editTask(uuid: string) {
+    this.onEdit.emit(uuid);
   }
 
   deleteTask(uuid: string) {

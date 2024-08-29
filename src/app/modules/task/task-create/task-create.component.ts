@@ -1,8 +1,8 @@
 import { tags } from './../../../mock-api/task/data';
 import { Subject, takeUntil } from 'rxjs';
-import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit, ChangeDetectionStrategy, Input } from '@angular/core';
 import { MatIcon } from '@angular/material/icon';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -35,8 +35,10 @@ export class TaskCreateComponent implements OnInit, OnDestroy {
     dueDate: new FormControl(new Date()),
   });
 
-  public tags         : TagModel[] = [];
-  public taskId!      : string;
+  public tags!         : any;
+  @Input() taskId!    : string;
+
+  public task!         : any;
 
   public isLoading!   : boolean;
 
@@ -47,29 +49,39 @@ export class TaskCreateComponent implements OnInit, OnDestroy {
     private _activeRoute : ActivatedRoute,
     private _taskService : TaskService
   ) {
-    this._activeRoute.params.subscribe((param) => {
-      this.taskId = param['id']
-    })
   }
 
-  ngOnInit(): void {
+  async ngOnInit() {
 
-    this._taskService?.getTags()
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((tags: TagModel[]) => {
-        this.tags = tags
-      })
+    this.tags = await this.getTags();
+    this.task = await this.getTaskById();
 
-    this._taskService.getTaskId(this.taskId)
-      .pipe(takeUntil(this.unsubscribe$))
-      .subscribe((task: TaskModel) => {
-        this.formTask.patchValue(task)
-      })
+    this.formTask.patchValue(this.task);
   }
 
   ngOnDestroy(): void {
     this.unsubscribe$.next(true);
     this.unsubscribe$.complete();
+  }
+
+  getTags() {
+    return new Promise((resolve) => {
+      this._taskService?.getTags()
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((tags: TagModel[]) => {
+        resolve(tags)
+      })
+    })
+  }
+
+  getTaskById() {
+    return new Promise((resolve) => {
+      this._taskService?.getTaskId(this.taskId)
+      .pipe(takeUntil(this.unsubscribe$))
+      .subscribe((task: TaskModel) => {
+        resolve(task)
+      })
+    })
   }
 
   public submit() {
@@ -87,6 +99,7 @@ export class TaskCreateComponent implements OnInit, OnDestroy {
           panelClass: 'success-snackbar'
         })
         this.isLoading = false;
+        this.close();
       },
       error: (err) => {
         this.snackbar.open(err, 'Close', {

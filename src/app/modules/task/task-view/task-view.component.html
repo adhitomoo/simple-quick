@@ -21,7 +21,7 @@
     <div class="mt-8 mx-4">
       @for (task of tasks; track $index) {
         <div class="mb-4">
-          <task-list [task]="task" (onDelete)="deleteTask($event)"></task-list>
+          <task-list [task]="task" (onDelete)="deleteTask($event)" (onEdit)="editTask($event)"></task-list>
         </div>
       }@empty {
         <span class="text-lg">No Task</span>

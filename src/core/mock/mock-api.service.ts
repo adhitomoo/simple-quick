@@ -156,8 +156,6 @@ export class MockApiService
         // Store the handler to access it from the interceptor
         this._handlers[method].set(url, fuseMockHttp);
 
-        console.log(fuseMockHttp);
-
         // Return the instance
         return fuseMockHttp;
     }

@@ -1,7 +1,7 @@
 export const tasks = [
   {
     uuid: 'ec8a2181-f695-4c0e-a67b-34b55532fb78',
-    title: 'Task 1',
+    title: 'Check and Revise Homework from Andre Gonzales',
     tags: [
       {
         uuid   : 'd3ef4226-ef2c-43b0-a986-3e3e07f32799',
@@ -13,6 +13,21 @@ export const tasks = [
         title: 'Client Related',
         color: '#CBF1C2'
       },
+    ],
+    done: false,
+    dueDate: new Date('2024-12-01'),
+    description: '',
+    priority: 1
+  },
+  {
+    uuid: '10e81481-378f-49ac-b06b-7c59dcc639ae',
+    title: 'Contact Andrew for Online Meeting and Conference',
+    tags: [
+      {
+        uuid   : '7dd40152-bf36-4449-a659-869da7b07919',
+        title: 'Appointment',
+        color: '#F9E0FD'
+    },
     ],
     done: false,
     dueDate: new Date('2024-12-01'),

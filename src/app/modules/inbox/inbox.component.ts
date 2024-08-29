@@ -9,129 +9,91 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { RouterLink, RouterOutlet } from '@angular/router';
 import { DateTime } from 'luxon';
 import { InboxNewChatComponent } from "./inbox-new-chat/inbox-new-chat.component";
-import { Subject } from 'rxjs';
+import { map, Subject, takeUntil } from 'rxjs';
+import { InboxService } from './inbox.service';
+import { chats } from '../../mock-api/inbox/data';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 
 const now = DateTime.now();
 
 @Component({
   selector: 'app-inbox',
   standalone: true,
-  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSidenavModule, RouterLink, RouterOutlet, InboxNewChatComponent, CommonModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatIconModule, MatInputModule, MatMenuModule, MatSidenavModule, RouterLink, RouterOutlet, InboxNewChatComponent, CommonModule, MatProgressSpinnerModule],
   providers: [DatePipe],
   templateUrl: './inbox.component.html',
   styleUrl: './inbox.component.scss'
 })
-export class InboxComponent {
+export class InboxComponent implements OnInit, OnDestroy {
 
   drawer          : boolean = false;
   drawerOpened    : boolean = false;
   drawerComponent : string = 'new-chat';
   selectedChat    : any;
   filteredChats   : any = [
-    {
-      id           : 'ff6bc7f1-449a-4419-af62-b89ce6cae0aa',
-      contactId    : '9d3f0e7f-dcbd-4e56-a5e8-87b8154e9edf',
-      contact      :     {
-        id         : '9d3f0e7f-dcbd-4e56-a5e8-87b8154e9edf',
-        avatar     : '',
-        name       : 'Dejesus Michael',
-        about      : 'Hi there! I\'m using FuseChat.',
-        details    : {
-            emails      : [
-                {
-                    email: 'dejesusmichael@mail.org',
-                    label: 'Personal',
-                },
-                {
-                    email: 'michael.dejesus@vitricomp.io',
-                    label: 'Work',
-                },
-            ],
-            phoneNumbers: [
-                {
-                    country    : 'bs',
-                    phoneNumber: '984 531 2468',
-                    label      : 'Mobile',
-                },
-                {
-                    country    : 'bs',
-                    phoneNumber: '806 470 2693',
-                    label      : 'Work',
-                },
-            ],
-            title       : 'Track Service Worker',
-            company     : 'Vitricomp',
-            birthday    : '1975-01-10T12:00:00.000Z',
-            address     : '279 Independence Avenue, Calvary, Guam, PO4127',
-        },
-    },
-      unreadCount  : 2,
-      muted        : false,
-      subject      : 'Jeannette Moraima Guaman Chamba (Hutto I-589) [ Hutto Follow Up - Brief Service ]',
-      lastMessage  : 'See you tomorrow!',
-      lastMessageAt: now.toISO(),
-  },
+
   ];
   chats: any = [
-    {
-        id           : 'ff6bc7f1-449a-4419-af62-b89ce6cae0aa',
-        contactId    : '9d3f0e7f-dcbd-4e56-a5e8-87b8154e9edf',
-        contact      :     {
-          id         : '9d3f0e7f-dcbd-4e56-a5e8-87b8154e9edf',
-          avatar     : '',
-          name       : 'Dejesus Michael',
-          about      : 'Hi there! I\'m using FuseChat.',
-          details    : {
-              emails      : [
-                  {
-                      email: 'dejesusmichael@mail.org',
-                      label: 'Personal',
-                  },
-                  {
-                      email: 'michael.dejesus@vitricomp.io',
-                      label: 'Work',
-                  },
-              ],
-              phoneNumbers: [
-                  {
-                      country    : 'bs',
-                      phoneNumber: '984 531 2468',
-                      label      : 'Mobile',
-                  },
-                  {
-                      country    : 'bs',
-                      phoneNumber: '806 470 2693',
-                      label      : 'Work',
-                  },
-              ],
-              title       : 'Track Service Worker',
-              company     : 'Vitricomp',
-              birthday    : '1975-01-10T12:00:00.000Z',
-              address     : '279 Independence Avenue, Calvary, Guam, PO4127',
-          },
-      },
-        unreadCount  : 2,
-        muted        : false,
-        lastMessage  : 'See you tomorrow!',
-        lastMessageAt: '26/04/2021',
-    },
-    {
-        id           : '4459a3f0-b65e-4df2-8c37-6ec72fcc4b31',
-        contactId    : '16b9e696-ea95-4dd8-86c4-3caf705a1dc6',
-        unreadCount  : 0,
-        muted        : false,
-        lastMessage  : 'See you tomorrow!',
-        lastMessageAt: '26/04/2021',
-    },
+
   ];
 
+  contacts!: any[];
+
+  unsubscribe$: Subject<boolean> = new Subject();
+  isLoading: boolean = true;
+
   constructor(
-    public datepipe: DatePipe
+    public datepipe: DatePipe,
+    private _inboxService: InboxService
   ) {}
+
+  async ngOnInit() {
+    this.contacts = await this.getContacts();
+    this.chats    = await this.getChats();
+    this.filteredChats = this.chats;
+  }
+
+  ngOnDestroy(): void {
+    this.unsubscribe$.next(true);
+    this.unsubscribe$.complete();
+  }
+
+  public getChats() {
+    this.isLoading = true;
+    return new Promise(resolve => {
+      this._inboxService.getChats()
+      .pipe(
+        takeUntil(this.unsubscribe$),
+        map(chats => chats.map(chat => ({
+          ...chat,
+          contacts: this.contacts.filter(c => c.id === chat.contactId)[0],
+          // lastMessageAt: this.datepipe.transform( new Date(chat.lastMessageAt), 'dd/MM/yyyy'),
+        })))
+        // map(chats => chats.map(chat => ({
+        //   ...chat,
+        //   lastMessageAt: this.datepipe.transform( new Date(chat.lastMessageAt), 'dd/MM/yyyy')
+        // })))
+      )
+      .subscribe(res => {
+        resolve(res)
+        this.isLoading = false;
+      })
+
+    })
+  }
+
+  public getContacts(): Promise<any> {
+    this.isLoading = true;
+    return new Promise(resolve => {
+      this._inboxService.getContacts().pipe(takeUntil(this.unsubscribe$)).subscribe(res => {
+        resolve(res);
+        this.isLoading = false;
+      })
+    })
+  }
 
   filterChats(search: string)
   {
-    console.log(search);
   }
 
   trackByFn(index: number, item: any): any

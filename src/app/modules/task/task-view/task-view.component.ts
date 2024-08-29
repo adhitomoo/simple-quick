@@ -77,17 +77,14 @@ export class TaskViewComponent implements OnDestroy, OnInit {
   }
 
   ngOnInit(): void {
-    this._router.events.pipe(takeUntil(this.unsubscribe$)).subscribe((event) => {
+    this._router.events
+    .pipe(takeUntil(this.unsubscribe$))
+    .subscribe((event) => {
       if (event instanceof NavigationEnd) {
         const id = this._activeRoute.snapshot.paramMap.get('id');
         if (id) {
           this.openDialog();
         }
-        // this._activeRoute.params.subscribe((res) => {
-        //   if (res['id']) {
-        //     this.openDialog();
-        //   }
-        // })
       }
     });
 
@@ -147,8 +144,11 @@ export class TaskViewComponent implements OnDestroy, OnInit {
       }
     )
 
+    dialogRef.componentInstance.taskId = this._activeRoute.snapshot.paramMap.get('id') || '';
+
     dialogRef.afterClosed().subscribe(result => {
       this._router.navigate(['./task']);
+      this.getTasks();
     });
   }
 
@@ -160,6 +160,10 @@ export class TaskViewComponent implements OnDestroy, OnInit {
     const totalDays = Math.round(diffrenceDate / (1000 * 3600 * 24));
 
     return totalDays >= 1 ? totalDays.toString() : 'Expired';
+  }
+
+  public editTask(uuid: string) {
+    this._router.navigate(['./task/', uuid]);
   }
 
   public deleteTask(uuid: string) {

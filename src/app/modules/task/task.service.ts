@@ -31,8 +31,8 @@ export class TaskService
       return this._httpClient.get<TaskModel[]>('api/tasks/all')
     }
 
-    public getTaskId(id: string): Observable<TaskModel> {
-      return this._httpClient.get<TaskModel>(`api/tasks/search`, {params: {id}})
+    public getTaskId(uuid: string): Observable<TaskModel> {
+      return this._httpClient.get<TaskModel>(`api/tasks/search`, {params: {id: uuid}})
     }
 
     public createTask(task: TaskModel): Observable<TaskModel> {

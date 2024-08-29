@@ -18,6 +18,9 @@
               <mat-icon>more_horiz</mat-icon>
             </button>
             <mat-menu #menu="matMenu">
+              <button mat-menu-item (click)="editTask(task.uuid)">
+                <span class="text-blue-500 text-lg">Edit</span>
+              </button>
               <button mat-menu-item (click)="deleteTask(task.uuid)">
                 <span class="text-red-500 text-lg">Delete</span>
               </button>
